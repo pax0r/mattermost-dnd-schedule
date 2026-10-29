@@ -1,0 +1,12 @@
+Scheduled DND
+Copyright 2026 Scheduled DND contributors
+Plugin implementation: MIT (see LICENSE).
+
+This project's layout and integration conventions are based on the official
+Mattermost Plugin Starter Template, licensed under Apache-2.0:
+https://github.com/mattermost/mattermost-plugin-starter-template
+
+Mattermost's public Go SDK is distributed under its own Apache-2.0 license.
+See licenses/Apache-2.0.txt and the dependency notices included in release bundles.
+The bundle includes notices collected from the linked Go modules and Go runtime.
+React is supplied by the host Mattermost webapp and is not distributed here.

@@ -1,0 +1,42 @@
+name: Test and bundle
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Match generated file ownership to the runner
+        run: |
+          echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
+      - name: Build toolchain image
+        run: docker compose build builder
+      - name: Resolve dependencies, test, build, and validate bundle
+        run: docker compose run --rm builder
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-dnd
+          path: dist/*.tar.gz
+          if-no-files-found: error
+      - name: Upload dependency lockfiles
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-lockfiles
+          path: |
+            go.mod
+            go.sum
+            webapp/package-lock.json
+          if-no-files-found: error
+      - name: Remove build containers and volumes
+        if: always()
+        run: docker compose down --volumes

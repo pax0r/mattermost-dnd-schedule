@@ -1,0 +1,132 @@
+name: Release new version
+
+run-name: Release new version (${{ inputs.bump }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version increment
+        type: choice
+        required: true
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-new-version
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      source: ${{ steps.version.outputs.source }}
+    steps:
+      - name: Require the default branch
+        env:
+          RELEASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/$RELEASE_BRANCH" ]; then
+            echo "::error::Run this workflow on the repository default branch."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Match generated file ownership to the runner
+        run: |
+          echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
+      - run: docker compose build builder
+      - name: Increment version in all manifests
+        env:
+          RELEASE_BUMP: ${{ inputs.bump }}
+        run: docker compose run --rm --entrypoint python3 builder scripts/version.py --bump "$RELEASE_BUMP"
+      - name: Record version and exact source commit
+        id: version
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const {execFileSync} = require('node:child_process');
+            const {version} = JSON.parse(fs.readFileSync('plugin.json', 'utf8'));
+            const tag = 'v' + version;
+            const refs = execFileSync('git', ['tag', '--list', tag], {encoding: 'utf8'}).trim();
+            if (refs) throw new Error('Release tag already exists: ' + tag);
+            core.setOutput('version', version);
+            core.setOutput('tag', tag);
+            core.setOutput('source', execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim());
+      - name: Test and prepare installable release assets
+        run: docker compose run --rm builder release
+      - name: Require source and dependency locks to remain unchanged
+        run: git diff --exit-code -- . ':!plugin.json' ':!webapp/package.json' ':!webapp/package-lock.json'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: |
+            dist/*.tar.gz
+            dist/*.sha256
+            dist/release-notes.md
+          if-no-files-found: error
+      - name: Preserve the exact manifest versions used for this build
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-manifests
+          path: |
+            plugin.json
+            webapp/package.json
+            webapp/package-lock.json
+          if-no-files-found: error
+      - name: Remove build containers and volumes
+        if: always()
+        run: docker compose down --volumes
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_BRANCH: ${{ github.event.repository.default_branch }}
+      RELEASE_TAG: ${{ needs.build.outputs.tag }}
+      BASE_SHA: ${{ needs.build.outputs.source }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build.outputs.source }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-manifests
+          path: .
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: dist
+      - name: Commit version and push branch and tag atomically
+        id: commit
+        run: bash scripts/commit-release.sh
+      - name: Publish release with installable bundle and checksum
+        uses: actions/github-script@v7
+        env:
+          RELEASE_COMMIT: ${{ steps.commit.outputs.commit }}
+        with:
+          script: |
+            await require('./scripts/publish-release.cjs')({
+              github, context, tag: process.env.RELEASE_TAG,
+              commit: process.env.RELEASE_COMMIT,
+            });
+      - name: Show release link
+        env:
+          RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.build.outputs.tag }}
+        run: printf '### Released %s\n\n[Download plugin](%s)\n' "$RELEASE_TAG" "$RELEASE_URL" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,16 @@
+services:
+  builder:
+    build:
+      context: .
+      args:
+        LOCAL_UID: ${LOCAL_UID:-1000}
+        LOCAL_GID: ${LOCAL_GID:-1000}
+    init: true
+    volumes:
+      - .:/workspace
+      - build-cache:/cache
+      - webapp-dependencies:/workspace/webapp/node_modules
+
+volumes:
+  build-cache:
+  webapp-dependencies:
