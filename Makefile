@@ -19,7 +19,7 @@ check-version:
 	python3 scripts/version.py --check
 
 deps:
-	go mod tidy
+	go mod download
 	cd webapp && if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
 
 test: check-version test-server test-webapp test-release typecheck
@@ -29,7 +29,7 @@ test-release:
 	node --test --experimental-test-isolation=none scripts/test_publish.cjs
 
 test-server:
-	go test -race -count=1 ./server/...
+	go test -mod=readonly -race -count=1 ./server/...
 
 test-webapp:
 	cd webapp && npm test

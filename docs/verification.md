@@ -10,7 +10,7 @@ Node, npm, Python, or Make installation is needed for this workflow.
   1.26.7, Node 24, npm, Python, Make, gcc, and Git.
 - `docker compose run --rm builder`: dependency resolution, tests, compilation,
   packaging, and archive validation all completed successfully.
-- Go tests passed with `go test -race -count=1 ./server/...`, covering schedule
+- Go tests passed with `go test -mod=readonly -race -count=1 ./server/...`, covering schedule
   boundaries, overnight/weekend intervals, timezone differences, Warsaw DST
   gaps/folds, overlaps, disabled/malformed configuration, restart recovery,
   manual overrides, concurrent CAS decisions, executor changes, schedule edits,
@@ -31,6 +31,10 @@ Node, npm, Python, or Make installation is needed for this workflow.
   ran all tests and type checks, built and validated the installable archive,
   and generated its SHA-256 file and notes. The source checkout remains at the
   unreleased `0.0.0` baseline; no existing release or tag was needed.
+- A release build with a fresh Go module cache passed the same source/lockfile
+  `git diff` guard used by GitHub Actions. Builds download pinned dependencies
+  without running `go mod tidy`; test, license, and compile steps use readonly
+  module resolution.
 - Manual workflow YAML and configuration were checked: `workflow_dispatch`,
   major/minor/patch choices, patch default, serialized releases, and write
   permissions restricted to the publish job.

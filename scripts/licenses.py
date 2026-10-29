@@ -20,7 +20,7 @@ def objects(text):
 
 
 def main():
-    result = subprocess.run(["go", "list", "-mod=mod", "-deps", "-json", "./server"], cwd=ROOT, capture_output=True, text=True, check=True)
+    result = subprocess.run(["go", "list", "-mod=readonly", "-deps", "-json", "./server"], cwd=ROOT, capture_output=True, text=True, check=True)
     modules = {}
     for package in objects(result.stdout):
         module = package.get("Module")

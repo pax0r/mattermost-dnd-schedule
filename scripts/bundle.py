@@ -26,7 +26,7 @@ def main():
         output = ROOT / executable
         output.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(
-            ["go", "build", "-mod=mod", "-trimpath", "-ldflags=-s -w", "-o", str(output), "./server"],
+            ["go", "build", "-mod=readonly", "-trimpath", "-ldflags=-s -w", "-o", str(output), "./server"],
             cwd=ROOT,
             env={**os.environ, "CGO_ENABLED": "0", "GOOS": target_os, "GOARCH": target_arch},
             check=True,

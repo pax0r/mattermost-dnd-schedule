@@ -67,6 +67,11 @@ Docker Compose build and verification, then uploads the plugin archive and
 dependency lockfiles as artifacts.
 No Go/Node setup on the CI host is required.
 
+Builds download the recorded Go dependency graph and compile with `-mod=readonly`.
+When changing dependencies, run `docker compose run --rm --entrypoint go builder
+mod tidy`, then review and commit the resulting `go.mod`/`go.sum` changes before
+releasing.
+
 If the host UID/GID changes, recreate the caches with `docker compose down
 --volumes` before rebuilding. That removes only this Compose project's caches
 and dependency volume; the source checkout and generated archives remain.
