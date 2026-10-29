@@ -2,7 +2,7 @@
   "id": "org.mattermost.scheduled-dnd",
   "name": "Scheduled DND",
   "description": "Private, recurring Do Not Disturb schedules that run on the server.",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "min_server_version": "11.7.0",
   "server": {
     "executables": {
