@@ -5,6 +5,23 @@ import {ScheduleAPI} from '../src/api.ts';
 import type {Fetcher} from '../src/api.ts';
 import {newRule} from '../src/model.ts';
 
+test('API preserves the global receiver required by browser fetch', async () => {
+    let calls = 0;
+    const browserFetch: Fetcher = async function(this: unknown) {
+        if (this !== globalThis) {
+            throw new TypeError('Illegal invocation');
+        }
+        calls++;
+        return new Response(JSON.stringify({revision: 1}), {status: 200});
+    };
+    const api = new ScheduleAPI('/plugins/id', browserFetch);
+    await api.load();
+    await api.save({enabled: true, timezone: 'Europe/Warsaw', schedule: [newRule()]}, 1);
+    await api.reset(1);
+    await api.skip();
+    assert.equal(calls, 4);
+});
+
 test('API uses same-origin credentials, subpath and no supplied user identity', async () => {
     const calls: {url: string; options: RequestInit}[] = [];
     const fetcher: Fetcher = async (url, options) => {

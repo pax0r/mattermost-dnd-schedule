@@ -1,13 +1,12 @@
 # User interface
 
-Open the Mattermost **main menu → Scheduled DND** in the desktop or browser client.
-This opens a native browser dialog within Mattermost, styled with Mattermost's
-theme variables and button conventions. It traps focus, supports Escape, and
-restores focus on close. It does not depend on private core React components.
+Open **Settings → Scheduled DND** in the desktop or browser client. The panel
+uses the supported `registerUserSettings` custom-section API and Mattermost's
+host React, theme variables, and button conventions. Configuration stays in
+plugin KV; the custom section manages its own save/reset controls.
 
 ```text
-PERSONAL SETTINGS                                ×
-Scheduled DND
+Settings → Scheduled DND
 Protect your quiet hours. Your schedule runs on the server…
 
 ┌ Current automation status ──────────────────────┐
@@ -49,9 +48,6 @@ the interval list. It retains a current interval's override/decision for safety.
 does not change the user's current Mattermost status. Changes in other tabs are
 detected through configuration revisions.
 
-`registerUserSettings` is available in the SDK, but its declarative schema stores
-preferences. This plugin uses the supported main-menu/root-component APIs to
-keep the dynamic editor, KV API validation, and automation state together.
 Native mobile clients do not load this settings panel. A schedule saved from
 desktop/web still runs while the user is offline and applies to their server
 presence without modifying the mobile app.
@@ -64,7 +60,7 @@ Run this against each target server release before publishing a release:
    few minutes ahead, close the client, and verify DND starts server-side and
    expires through Mattermost's timed-DND job.
 2. Reopen the panel and check saved values, theme colors, keyboard navigation,
-   Escape, focus restoration, validation messages, and current/next intervals.
+   native settings navigation, validation messages, and current/next intervals.
 3. Create another user's schedule. Verify the two configurations are independent.
 4. In two tabs, load the same revision and save different edits. The second
    save must show a conflict; reload must show the accepted configuration.

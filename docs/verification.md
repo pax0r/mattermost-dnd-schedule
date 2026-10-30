@@ -1,55 +1,44 @@
-# Verification status
+# Verification
 
-Verified on 2026-10-29 using the repository's Docker Compose builder. No host Go,
-Node, npm, Python, or Make installation is needed for this workflow.
+## Automated coverage
 
-## Executed successfully
+`docker compose run --rm builder release` passes in the Docker builder:
 
-- `docker compose config --quiet`: Compose configuration accepted.
-- `docker compose build builder`: toolchain image built successfully with Go
-  1.26.7, Node 24, npm, Python, Make, gcc, and Git.
-- `docker compose run --rm builder`: dependency resolution, tests, compilation,
-  packaging, and archive validation all completed successfully.
-- Go tests passed with `go test -mod=readonly -race -count=1 ./server/...`, covering schedule
-  boundaries, overnight/weekend intervals, timezone differences, Warsaw DST
-  gaps/folds, overlaps, disabled/malformed configuration, restart recovery,
-  manual overrides, concurrent CAS decisions, executor changes, schedule edits,
-  missing/deactivated users, API authentication/isolation, and malformed requests.
-- All 10 frontend functional tests passed, covering configuration validation,
-  overnight summaries, weekly unions, request identity isolation, revisions,
-  and API failures. Full React/JSX TypeScript checking passed.
-- Twelve Python release tests passed, covering synchronized version updates,
-  first-release and later major/minor/patch increments, validation, checksums,
-  notes, and real Git operations against temporary local bare repositories.
-  Git tests verify the first commit/tag push, reuse of an exact remote release
-  on retry, atomic rejection when the branch advances, and tag collision handling.
-- Six publisher tests with an injected GitHub client cover complete uploads,
-  failed uploads remaining unpublished, checksum/tag/commit rejection before
-  creating a release, and prerelease marking. They make no actual GitHub requests.
-- The frontend bundle and both Linux amd64/arm64 server executables built.
-  An isolated container copy starting at `0.0.0` successfully bumped to `0.0.1`,
-  ran all tests and type checks, built and validated the installable archive,
-  and generated its SHA-256 file and notes. The source checkout remains at the
-  unreleased `0.0.0` baseline; no existing release or tag was needed.
-- A release build with a fresh Go module cache passed the same source/lockfile
-  `git diff` guard used by GitHub Actions. Builds download pinned dependencies
-  without running `go mod tidy`; test, license, and compile steps use readonly
-  module resolution.
-- Manual workflow YAML and configuration were checked: `workflow_dispatch`,
-  major/minor/patch choices, patch default, serialized releases, and write
-  permissions restricted to the publish job.
-- Dependency checksums/lockfiles and linked Go dependency license notices were
-  generated. Build output belongs to the configured host UID/GID.
-- A separate Node VM check confirmed browser bundle registration of the matching
-  manifest ID, root component, menu action, and cleanup event with a stub host.
+- Go tests with the race detector cover scheduling, Warsaw DST boundaries,
+  persistence/restart recovery, overrides, concurrent KV decisions, executor
+  changes, authenticated HTTP requests, and private slash commands.
+- Eleven frontend tests cover validation, summaries, request revisions, errors,
+  and the browser receiver required by native `fetch`.
+- Six Playwright tests run Chromium against the compiled plugin bundle and the
+  production Go HTTP handler. They cover settings registration, subpath routing,
+  load/save/reload, multiple intervals, validation, concurrent edits, skip/reset,
+  authentication failures, and backend failures. Browser `fetch` is not replaced.
+- Twelve Python tests and six Node tests cover versioning, packaging, checksums,
+  Git release races, and publishing through an injected GitHub client.
+- TypeScript checking, Linux amd64/arm64 compilation, archive validation, and
+  local checksum generation pass.
 
-## Not yet verified
+Run browser tests independently after dependency installation:
 
-- The GitHub Actions workflow uses the same Compose commands, but has not been
-  executed on GitHub from this workspace.
-- Live Mattermost 11.7/12.x single-node and HA tests, native timed-DND expiration,
-  desktop theme/keyboard behavior, and real server RPC behavior require the
-  acceptance walkthrough in [UI documentation](ui.md). Mocked tests do not
-  certify actual cluster failover or browser rendering.
-- No separate formatter or linter run is claimed.
+```sh
+docker compose run --rm builder test-browser
+```
 
+The browser fixture uses React 17, a minimal implementation of Mattermost's
+supported user-settings registration, and fake Mattermost KV/presence APIs.
+Its HTTP server exists only in Go test code. Tests use isolated browser contexts
+and a fixed server clock. They do not require a running Mattermost instance.
+
+Browser tests are required by both CI and the manual release workflow. Failures
+produce an HTML report, screenshots, and traces under `webapp/playwright-report/`
+and `webapp/test-results/`; workflows upload these as diagnostic artifacts.
+Playwright and Chromium versions must match between `webapp/package.json` and
+`Dockerfile`.
+
+## Live verification
+
+Automated fixtures do not certify Mattermost's own settings renderer, RPC,
+cluster failover, or native timed-DND expiration. Run the acceptance walkthrough
+in [UI documentation](ui.md) on supported single-node and HA deployments before
+publishing. Those live checks and execution of the updated workflows on GitHub
+have not been verified in this workspace.

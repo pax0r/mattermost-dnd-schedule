@@ -31,8 +31,13 @@ func (p *Plugin) OnActivate() error {
 		if err := mutex.LockWithContext(ctx); err != nil { return nil, err }
 		return mutex.Unlock, nil
 	}}
+	if err := p.API.RegisterCommand(&model.Command{
+		Trigger: "dnd-schedule", DisplayName: "Scheduled DND", AutoComplete: true,
+		AutoCompleteDesc: "Manage your personal DND schedule",
+		AutoCompleteHint: "[status|on|off|skip|help]",
+	}); err != nil { p.cancel(); return err }
 	job, err := cluster.Schedule(p.API, "scheduled-dnd-tick", cluster.MakeWaitForRoundedInterval(30*time.Second), p.runJob)
-	if err != nil { p.cancel(); return err }
+	if err != nil { p.cancel(); _ = p.API.UnregisterCommand("", "dnd-schedule"); return err }
 	p.job = job
 	return nil
 }

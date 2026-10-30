@@ -5,7 +5,7 @@ import {automationLabels, days, newRule, summary, validate} from './model';
 import type {Config, Rule, View} from './model';
 import {styles} from './styles';
 
-type Props = {api: ScheduleAPI; onClose: () => void};
+type Props = {api: ScheduleAPI};
 
 function formatDate(value: string, timezone: string): string {
     return new Intl.DateTimeFormat(undefined, {timeZone: timezone, dateStyle: 'medium', timeStyle: 'short'}).format(new Date(value));
@@ -16,21 +16,18 @@ function timezones(): string[] {
     return ['UTC', ...(intl.supportedValuesOf?.('timeZone') ?? ['Europe/Warsaw', 'Europe/London', 'America/New_York', 'Asia/Tokyo'])];
 }
 
-export function Settings({api, onClose}: Props) {
+export function Settings({api}: Props) {
     const [view, setView] = useState<View | null>(null);
     const [draft, setDraft] = useState<Config | null>(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
-    const dialog = useRef<HTMLDialogElement>(null);
     const alive = useRef(true);
     const savedRevision = useRef(0);
 
     useEffect(() => {
         alive.current = true;
-        const previous = document.activeElement as HTMLElement | null;
-        dialog.current?.showModal();
-        return () => { alive.current = false; previous?.focus(); };
+        return () => { alive.current = false; };
     }, []);
 
     useEffect(() => {
@@ -79,12 +76,8 @@ export function Settings({api, onClose}: Props) {
     const dirty = draft && view && JSON.stringify(draft) !== JSON.stringify(view.config);
 
     return (
-        <dialog className='scheduled-dnd' ref={dialog} aria-labelledby='scheduled-dnd-title' onCancel={(event) => { event.preventDefault(); onClose(); }}>
+        <section className='scheduled-dnd' aria-label='DND schedule'>
             <style>{styles}</style>
-            <header>
-                <div><span className='dnd-eyebrow'>PERSONAL SETTINGS</span><h2 id='scheduled-dnd-title'>Scheduled DND</h2></div>
-                <button type='button' className='dnd-close' aria-label='Close settings' onClick={onClose}>×</button>
-            </header>
             <p>Protect your quiet hours. Your schedule runs on the server, even when you are offline.</p>
             {error && <div role='alert' className='dnd-error'>{error} <button type='button' disabled={busy} onClick={() => void mutate(() => api.load(), 'Configuration reloaded.', true)}>Reload saved configuration</button></div>}
             {message && <div role='status' className='dnd-notice'>{message}</div>}
@@ -136,6 +129,6 @@ export function Settings({api, onClose}: Props) {
                 <button type='button' className='btn btn-tertiary' disabled={busy || !view.current || view.automation === 'skipped'} onClick={() => void mutate(() => api.skip(), 'This interval is skipped. To leave active DND now, use your Mattermost status menu.', false)}>Skip current interval</button>
                 <p className='dnd-help'>Skipping prevents activation. To end active DND, use your Mattermost status menu. Manual changes are respected for the rest of this interval. Saving edits after an interval was handled defers automation until the current interval ends; existing DND keeps its original expiration.</p>
             </>}
-        </dialog>
+        </section>
     );
 }

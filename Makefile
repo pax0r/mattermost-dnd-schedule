@@ -1,4 +1,4 @@
-.PHONY: all verify release version check-version dist deps test test-server test-webapp test-release typecheck clean
+.PHONY: all verify release version check-version dist deps test test-server test-webapp test-release test-browser typecheck clean
 
 export VERSION
 
@@ -22,7 +22,7 @@ deps:
 	go mod download
 	cd webapp && if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
 
-test: check-version test-server test-webapp test-release typecheck
+test: check-version test-server test-webapp test-release typecheck test-browser
 
 test-release:
 	python3 -m unittest discover -s scripts -p 'test_*.py' -v
@@ -33,6 +33,10 @@ test-server:
 
 test-webapp:
 	cd webapp && npm test
+
+test-browser:
+	cd webapp && npm run build
+	SCHEDULED_DND_BROWSER_TESTS=1 go test -v -mod=readonly -race -count=1 -timeout=5m ./server -run '^TestBrowserIntegration$$'
 
 typecheck:
 	cd webapp && npm run typecheck

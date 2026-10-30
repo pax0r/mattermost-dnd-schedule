@@ -76,11 +76,17 @@ forfeits that interval instead of risking a duplicate activation.
 ## UI and calendar reference
 
 The [webapp reference](https://docs.mattermost.com/developers/integrate/reference/webapp)
-documents `registerUserSettings`, `registerRootComponent`, and
-`registerMainMenuAction`. The settings schema persists values in Mattermost
-preferences. A main-menu panel is chosen for the dynamic interval editor and
-KV-backed configuration, using the host's React and theme CSS variables. Internal
-webapp components are not a stable plugin import API.
+documents `registerUserSettings`. The [11.7 settings schema](https://github.com/mattermost/mattermost/blob/v11.7.0/webapp/channels/src/types/plugins/user_settings.ts)
+supports `{id, uiName, sections: [{title, component}]}`. The
+[settings renderer](https://github.com/mattermost/mattermost/blob/v11.7.0/webapp/channels/src/components/user_settings/plugin/index.tsx)
+mounts each custom component in the native user settings tab. Unlike declarative
+settings, custom sections can use the plugin's KV-backed HTTP API and their own
+save controls. No private core components are imported.
+
+Slash commands use `RegisterCommand(*model.Command) error` and
+`ExecuteCommand(*plugin.Context, *model.CommandArgs) (*model.CommandResponse, *model.AppError)`.
+The authenticated `CommandArgs.UserId` selects the caller's configuration;
+responses use `model.CommandResponseTypeEphemeral`.
 
 The [Google Calendar entry point](https://github.com/mattermost/mattermost-plugin-google-calendar/blob/master/server/main.go)
 delegates to the shared Microsoft Calendar engine. Its

@@ -37,6 +37,15 @@ jobs:
             go.sum
             webapp/package-lock.json
           if-no-files-found: error
+      - name: Upload browser test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-diagnostics
+          path: |
+            webapp/playwright-report/
+            webapp/test-results/
+          if-no-files-found: ignore
       - name: Remove build containers and volumes
         if: always()
         run: docker compose down --volumes

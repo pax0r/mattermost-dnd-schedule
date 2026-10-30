@@ -6,6 +6,9 @@ services:
         LOCAL_UID: ${LOCAL_UID:-1000}
         LOCAL_GID: ${LOCAL_GID:-1000}
     init: true
+    shm_size: 1gb
+    environment:
+      CI: ${CI:-}
     volumes:
       - .:/workspace
       - build-cache:/cache

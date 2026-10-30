@@ -7,7 +7,7 @@ export class ScheduleAPI {
 
     constructor(base: string, fetcher: Fetcher = fetch) {
         this.base = base;
-        this.fetcher = fetcher;
+        this.fetcher = fetcher.bind(globalThis);
     }
 
     private async request(path: string, options: RequestInit = {}): Promise<View> {

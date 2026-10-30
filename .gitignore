@@ -41,3 +41,5 @@ go.work.sum
 /licenses/dependencies/
 __pycache__/
 *.log
+/webapp/playwright-report/
+/webapp/test-results/

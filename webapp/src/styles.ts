@@ -1,12 +1,7 @@
 export const styles = `
-.scheduled-dnd { color: var(--center-channel-color, #3d3c40); background: var(--center-channel-bg, #fff); border: 1px solid rgba(var(--center-channel-color-rgb, 63,67,80), .2); border-radius: 12px; width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 28px; box-shadow: 0 16px 48px #0004; }
-.scheduled-dnd::backdrop { background: #0007; }
-.scheduled-dnd header { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
-.scheduled-dnd h2 { margin: 6px 0 12px; font-size: 24px; font-weight: 600; }
+.scheduled-dnd { color: var(--center-channel-color, #3d3c40); padding: 20px 0; }
 .scheduled-dnd h3 { font-size: 16px; font-weight: 600; }
 .scheduled-dnd p { line-height: 1.5; }
-.scheduled-dnd .dnd-eyebrow { font-size: 11px; letter-spacing: 1px; opacity: .7; }
-.scheduled-dnd .dnd-close { border: 0; color: inherit; background: transparent; font-size: 28px; line-height: 1; padding: 4px; }
 .scheduled-dnd .dnd-status { border-left: 3px solid var(--button-bg, #166de0); background: rgba(var(--center-channel-color-rgb, 63,67,80), .04); padding: 16px; margin: 20px 0; line-height: 1.7; }
 .scheduled-dnd .dnd-fields { border: 0; padding: 0; min-width: 0; display: grid; gap: 12px; }
 .scheduled-dnd .dnd-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-weight: 600; }

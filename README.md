@@ -18,7 +18,7 @@ Live Mattermost and HA compatibility have not yet been validated.
    or build it using the instructions below. GitHub's **Source code** archives
    are not installable plugins.
 2. As a system administrator, upload it in **System Console → Plugins → Plugin Management**.
-3. Enable **Scheduled DND**, reload the client, and open **main menu → Scheduled DND**.
+3. Enable **Scheduled DND**, reload the client, and open **Settings → Scheduled DND**.
 
 Manual uploads require `PluginSettings.EnableUploads=true`. Deployments enforcing
 `RequirePluginSignature` disable web uploads and need signed distribution with
@@ -59,6 +59,11 @@ are rejected; a configuration can contain up to 32 intervals.
 During a spring DST gap, missing times advance to the first valid wall minute;
 a collapsed interval is skipped. During an autumn repeated hour, starts use the
 first occurrence and ends use the last.
+
+Use `/dnd-schedule` or `/dnd-schedule status` to inspect your saved schedule.
+`on` and `off` enable or disable it; `skip` pauses the current interval; `help`
+shows usage. Responses are visible only to you. Configure intervals in Settings
+before using `on`. These commands do not clear existing DND.
 
 ## Manual controls and limitations
 
@@ -106,12 +111,13 @@ docker compose build builder
 docker compose run --rm builder
 ```
 
-This runs Go race tests, frontend and release-tool tests, TypeScript checking,
-and builds and validates both server architectures. The plugin bundle is written
+This runs Go race tests, frontend and release-tool tests, Chromium integration
+tests, and TypeScript checking, then builds and validates both server architectures. The plugin bundle is written
 to `dist/org.mattermost.scheduled-dnd-<version>.tar.gz`.
 
 For individual steps, use `docker compose run --rm builder` followed by `deps`,
-`test`, `dist`, or `clean`. Caches and frontend dependencies use Docker volumes.
+`test`, `test-browser`, `dist`, or `clean`. Caches and frontend dependencies use
+Docker volumes.
 Builds use pinned dependencies and readonly Go module resolution. To change Go
 dependencies, run:
 
@@ -143,7 +149,7 @@ For an unpublished local bundle, run `docker compose run --rm builder release`.
 
 ## Troubleshooting
 
-- **Menu missing:** enable the plugin and reload a desktop/browser client.
+- **Settings tab missing:** enable the plugin and reload a desktop/browser client.
 - **No activation:** check timezone, start days, enabled state, manual status,
   and the panel's automation status. Skipped, preserved, failed, or pending
   intervals are not retried.

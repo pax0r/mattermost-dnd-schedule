@@ -11,6 +11,11 @@ COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
 RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
+# Keep Chromium and its system libraries inside the build environment.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+RUN npx --yes playwright@1.64.1 install --with-deps chromium \
+    && chmod -R a+rX /opt/playwright
+
 # Match the host user so generated lockfiles and artifacts remain editable.
 ARG LOCAL_UID=1000
 ARG LOCAL_GID=1000
